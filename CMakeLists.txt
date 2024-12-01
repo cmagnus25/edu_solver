@@ -55,7 +55,7 @@ SET(BASICLIB basic)
 SET(GRADLIB gradient)
 SET(LINSOLVLIB linear_solver)
 SET(JACLIB jacobian)
-#SET(RESLIB residual)
+SET(RESLIB residual)
 SET(SOLVLIB solver)
 
 # Define some directories
@@ -67,7 +67,7 @@ SET(SRCBAS  ${SRC}/basic)
 SET(SRCGRAD ${SRC}/gradient)
 SET(SRCLIN  ${SRC}/linear_solver)
 SET(SRCJAC  ${SRC}/jacobian)
-#SET(SRCRES  ${SRC}/residual)
+SET(SRCRES  ${SRC}/residual)
 SET(SRCSOL  ${SRC}/solver)
 
 # Have the .mod files placed in the lib folder
@@ -78,7 +78,7 @@ ADD_SUBDIRECTORY(${SRCBAS}  ${LIB}/basic)
 ADD_SUBDIRECTORY(${SRCGRAD} ${LIB}/gradient)
 ADD_SUBDIRECTORY(${SRCLIN}  ${LIB}/linear_solver)
 ADD_SUBDIRECTORY(${SRCJAC}  ${LIB}/jacobian)
-#DD_SUBDIRECTORY(${SRCRES}  ${LIB}/residual)
+ADD_SUBDIRECTORY(${SRCRES}  ${LIB}/residual)
 ADD_SUBDIRECTORY(${SRCSOL}  ${LIB}/solver)
 # The source for the FOO binary and have it placed in the bin folder
 ADD_SUBDIRECTORY(${SRCMAIN} ${BIN})
