@@ -134,8 +134,9 @@
  use edu2d_my_main_data , only : nq, M_inf, gamma, iteration_method,         &
                                  CFLexp, CFL1, CFL2, CFL_ramp_steps, sweeps, &
                                  tolerance, tolerance_linear, max_iterations,&    
-                                 inviscid_flux, inviscid_jac,                &
-                                 jac, nnodes, node, gradient_type, gradient_weight, gradient_weight_p
+                                 inviscid_flux, inviscid_jac, tolerance_gcr, &
+                                 jac, nnodes, node, gradient_type, gradient_weight,&
+                                 gradient_weight_p, max_projection_gcr
 
  use edu2d_euler_implct_solver, only : euler_solver_main
  use gradients_lsq, only : compute_lsq_coeff_nc, check_lsq_coeff_nc
@@ -172,7 +173,7 @@
             M_inf  = 0.3_p2     ! Free stream Mach number
              gamma = 1.4_p2     ! Ratio of specific heats
 
-  iteration_method = "implicit" ! Solution method: "explicit" or "implicit"
+  iteration_method = "implicit_gcr" ! Solution method: "explicit" or "implicit"
 
 !  For explicit scheme (2-staege Runge-Kutta)
 
@@ -183,13 +184,15 @@
 !        E.g., Increase 'sweeps' to solve the linear system better.
 
               CFL1 = 1.0e+00_p2 ! Initial CFL for implicit method
-              CFL2 = 1.0e+5_p2  !   Final CFL for implicit method
+              CFL2 = 1.0e+2_p2  !   Final CFL for implicit method
     CFL_ramp_steps = 120        ! Number of iterations to reach from CFL1 to CFL2
-            sweeps = 15         ! Number of linear GS sweeps for implicit method
+            sweeps = 500        ! Number of linear GS sweeps for implicit method
 
          tolerance = 1.0e-15_p2 ! Residual tolerance for steady computations
-  tolerance_linear = 1.0e-1_p2 ! Residual tolerance for linear system
-    max_iterations = 1000      ! Max number of iterations
+  tolerance_linear = 1.0e-1_p2  ! Residual tolerance for linear system
+     tolerance_gcr = 1.0e-1_p2  !
+    max_iterations = 100        ! Max number of iterations
+max_projection_gcr = 20         ! Max projections for GCR (larger->more expensive/memory)
 
 !  Sorry, but only the Roe flux is implemented in this code.
 
@@ -199,7 +202,7 @@
                   nq = 4        ! The number of equtaions/variables in the target equtaion.
                                 ! This is 4 for 2D Euler equations.
 
-   gradient_type     = "linear" ! or "quadratic2 for a quadratic LSQ.
+   gradient_type     = "none"   ! or "quadratic2 for a quadratic LSQ.
    gradient_weight   = "none"   ! or "inverse_distance"
    gradient_weight_p =  zero    ! or any other real value
 
@@ -233,7 +236,9 @@
   write(*,*)
   write(*,*) "              tolerance = ", tolerance
   write(*,*) "       tolerance_linear = ", tolerance_linear
+  write(*,*) "          tolerance_gcr = ", tolerance_gcr
   write(*,*) "         max_iterations = ", max_iterations
+  write(*,*) "     max_projection_gcr = ", max_projection_gcr
   write(*,*)
   write(*,*) "          inviscid_flux = ", trim(inviscid_flux)
   write(*,*) "          inviscid_jac  = ", trim(inviscid_jac)
@@ -260,14 +265,18 @@
        allocate( node(i)%w(    nq  ) )
        allocate( node(i)%gradw(nq,2) ) !<- 2: x and y components.
        allocate( node(i)%res(  nq  ) )
+       allocate( node(i)%r_temp(  nq  ) )
+       allocate( node(i)%u_temp(  nq  ) )
+       allocate( node(i)%w_temp(  nq  ) )
       end do
 
      !For implicit method, allocate the arrays that store a Jacobian matrix
-      if (trim(iteration_method) == "implicit") then
+      if (trim(iteration_method) == "implicit" .OR. &
+          trim(iteration_method) == "implicit_gcr") then
          allocate(jac(nnodes))
        do i = 1, nnodes
          allocate( jac(i)%diag(nq,nq)                 ) ! Diagonal block
-		 allocate( jac(i)%diag_inverse(nq,nq)         ) ! Inverse Diagonal block
+         allocate( jac(i)%diag_inverse(nq,nq)         ) ! Inverse Diagonal block
          allocate( jac(i)%off( nq,nq, node(i)%nnghbrs)) ! Off-diagonal block
        end do
       endif
@@ -305,7 +314,7 @@
 
  use edu2d_constants   , only : zero, one
  use edu2d_my_main_data, only : nnodes, node, gamma, M_inf, rho_inf, u_inf, v_inf, p_inf
- use edu2d_euler_implct_solver, only : w2u
+ use vector_operations,  only : w2u
 
  implicit none
 
