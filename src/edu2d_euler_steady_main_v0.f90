@@ -183,16 +183,16 @@
 !  Note: Explore various combinations of these parameters.
 !        E.g., Increase 'sweeps' to solve the linear system better.
 
-              CFL1 = 1.0e+00_p2 ! Initial CFL for implicit method
-              CFL2 = 1.0e+2_p2  !   Final CFL for implicit method
-    CFL_ramp_steps = 120        ! Number of iterations to reach from CFL1 to CFL2
+              CFL1 = 1.0e+1_p2  ! Initial CFL for implicit method
+              CFL2 = 1.0e+5_p2  !   Final CFL for implicit method
+    CFL_ramp_steps = 10         ! Number of iterations to reach from CFL1 to CFL2
             sweeps = 500        ! Number of linear GS sweeps for implicit method
 
          tolerance = 1.0e-15_p2 ! Residual tolerance for steady computations
-  tolerance_linear = 1.0e-1_p2  ! Residual tolerance for linear system
+  tolerance_linear = 0.5e+0_p2  ! Residual tolerance for linear system
      tolerance_gcr = 1.0e-1_p2  !
     max_iterations = 100        ! Max number of iterations
-max_projection_gcr = 20         ! Max projections for GCR (larger->more expensive/memory)
+max_projection_gcr = 30         ! Max projections for GCR (larger->more expensive/memory)
 
 !  Sorry, but only the Roe flux is implemented in this code.
 
@@ -202,7 +202,7 @@ max_projection_gcr = 20         ! Max projections for GCR (larger->more expensiv
                   nq = 4        ! The number of equtaions/variables in the target equtaion.
                                 ! This is 4 for 2D Euler equations.
 
-   gradient_type     = "none"   ! or "quadratic2 for a quadratic LSQ.
+   gradient_type     = "linear" ! or "quadratic2 for a quadratic LSQ.
    gradient_weight   = "none"   ! or "inverse_distance"
    gradient_weight_p =  zero    ! or any other real value
 
