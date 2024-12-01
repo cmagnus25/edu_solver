@@ -1,0 +1,8 @@
+# residual library
+SET(RES_src ${SRCRES}/residual.f90
+            ${SRCRES}/roe.f90
+)
+ADD_LIBRARY(${RESLIB} STATIC ${RES_src})
+
+TARGET_LINK_LIBRARIES(${RESLIB} ${BASICLIB})
+TARGET_LINK_LIBRARIES(${RESLIB} ${GRADLIB})
