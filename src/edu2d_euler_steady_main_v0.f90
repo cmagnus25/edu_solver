@@ -137,9 +137,9 @@
                                  inviscid_flux, inviscid_jac,                &
                                  jac, nnodes, node, gradient_type, gradient_weight, gradient_weight_p
 
- use edu2d_euler_implct_solver, only : euler_solver_main, compute_lsq_coeff_nc, check_lsq_coeff_nc
-
-
+ use edu2d_euler_implct_solver, only : euler_solver_main
+ use gradients_lsq, only : compute_lsq_coeff_nc, check_lsq_coeff_nc
+ 
  implicit none
 
 !Inout data files
