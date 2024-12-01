@@ -1,5 +1,6 @@
 # linear solver library
 SET(LINSOLV_src ${SRCLIN}/edu2d_euler_linear_solve_v0.f90
+                ${SRCLIN}/preconditioner.f90
 )
 ADD_LIBRARY(${LINSOLVLIB} STATIC ${LINSOLV_src})
 
