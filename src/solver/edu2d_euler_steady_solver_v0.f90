@@ -50,26 +50,32 @@
 
  use edu2d_constants   , only : p2, one, half
 
- use edu2d_my_main_data, only : CFL, nnodes, node, tolerance, cfl1, cfl2, CFL_ramp_steps, &
-                                iteration_method, max_iterations, CFLexp, nq, i_iteration
+ use edu2d_my_main_data, only : CFL, nnodes, node, tolerance, CFL1, CFL2, CFL_ramp_steps, &
+                                iteration_method, max_iterations, CFLexp, nq, i_iteration, &
+								max_projection_gcr
 
 !Implicit method uses subroutines below to construct Jacobian matrix
 !and relax the linear system.
  use edu2d_euler_jacobian    , only : construct_jacobian_ncfv ! Construct Jacobian
  use edu2d_euler_linear_solve, only : gs_sequential, gs_sequential2 ! GS relaxaton for linear system
- use residual, only : compute_residual_ncfv
+ use gcr_solver, only : jfnk_gcr_solver
+ use residual,   only : compute_residual_ncfv
 
  implicit none
 
 !Local variables
+ real(p2), dimension(nq) :: res_norm1_initial
+ real(p2), dimension(nq) :: res_norm1_pre
+
  real(p2), dimension(nq,3)             :: res_norm      !Residual norms(L1,L2,Linf)
  real(p2), dimension(:,:), allocatable :: u0            !Saved solution
  real(p2)                              :: s, exp_factor !CFL ramping variables
  integer                               :: i
  real(p2)                              :: time_begin    !Starting time
  real(p2)                              :: time_end      !End time
- integer                               :: sweeps_actual
- real(p2)                              :: roc
+ integer                               :: sweeps_actual, gcr_actual
+ integer                               :: total_steps
+ real(p2)                              :: roc, CFL_previous
 
 ! For explicit scheme:
 !  1. Allocate the temporary solution array needed for the Runge-Kutta method.
@@ -203,6 +209,103 @@
 
 !   Go to the next iteration
     cycle iteration
+!*********************************************************************
+!*********************************************************************
+! Method 3: Implicit JFNK-GCR solver with DC preconditioner
+!	
+  elseif (trim(iteration_method) == "implicit_gcr") then
+  
+    CFL_previous = CFL
+
+!   Exponential CFL ramping between CFL1 and CFL2 over 'CFL_ramp_steps' iterations.
+!   Note: This is by no means an optimal ramping strategy.
+    if (i_iteration <= CFL_ramp_steps) then
+
+     exp_factor = 0.5_p2
+       s = real( i_iteration, p2) / real( CFL_ramp_steps, p2)
+     CFL = CFL1 + (CFL2-CFL1)*( one - exp(-s*exp_factor) )/ ( one - exp(-exp_factor) )
+
+    endif
+
+!   Compute Residual: Right hand side of [V/dt+dR/dU]*dU = -Residual
+    call compute_residual_ncfv   ! -> This computes node(:)%res.
+
+!   Compute residual norms (undivided residual)
+    call residual_norm(res_norm) ! -> This computes res_norm.
+	
+!   Set the initial residual after the first iteration.
+    if (i_iteration==1) then
+      res_norm1_initial = res_norm(:,1)
+      res_norm1_pre     = res_norm(:,1)
+    endif
+
+!   Display the residual norm.
+    if (i_iteration==0) write(*,'(a101)') "Density    X-momentum  Y-momentum   Energy"
+	if (i_iteration>=0) then
+     call report_res_norm(CFL_previous,res_norm(:,:),res_norm1_pre, sweeps_actual,gcr_actual,roc)
+
+     if (i_iteration==1) write(*,*)
+     if (i_iteration==1) write(*,'(a)') "    Note: We take these residuals (after the 1st iteration)"
+     if (i_iteration==1) write(*,'(a)') "          as the initial residual to measure the reduction."
+     if (i_iteration==1) write(*,*)
+
+     write(*,'(a86)') "   ----------------------------------------------------------------------------------"
+    endif
+	
+!   Stop if the L1 residual norm drops below the specified tolerance or if we reach the max iteration.
+!   Note: Machine zero residual level is very hard to define. Here, I just set it to be 1.0e-14.
+!         It may be larger or smaller for different problems.
+    if (i_iteration >= 1) then
+
+     if (     maxval(res_norm(:,1)/res_norm1_initial(:)) < tolerance & !Tolerance met
+         .or. maxval(res_norm(:,1)) < 1.0e-14                        & !Machine zero(?)
+                                                                                 ) then
+       total_steps = i_iteration
+       write(*,*)
+       write(*,'(a15,i10,a12,4es12.2,a10)') "    steps=", total_steps, &
+                                       " L1(res)=",res_norm(:,1), " Converged"
+       write(*,*)
+       exit iteration
+     endif
+
+    endif
+	
+	!   Proceed to the next iteration
+    res_norm1_pre = res_norm(:,1)
+
+!   Compute the local time step (the local time step is used by DC in pseudo time term)
+    call compute_time_step       ! -> This computes node(:)%dt.
+
+!   Construct the residual Jacobian matrix (based on 1st-order scheme: Defect Correction)
+!   which is the matrix on the left hand side of [V/dt+dR/dU]*dU = -Residual.
+!   Note: This sbroutine can be found in edu2d_euler_jacobian_v0.f90
+    call construct_jacobian_ncfv ! -> This computes jac(:)%diag and jac(:)%off.
+
+!   Compute du (Correction) by Defect-correction iteration or Newton-Krylov.
+
+    !------------------------------------------------
+    !(1)Defect correction: Relax the linear system by Gauss-Seidel to get du (Correction)
+     if (max_projection_gcr == 0) then
+
+      call gs_sequential2(sweeps_actual,roc)
+
+    !----------------------------------------------------
+    !(2)GCR with defect-correction as a preconditioner
+     elseif (max_projection_gcr > 0) then
+
+      !For GCR, sweeps_actual=actual_projections, cr_gs=l1norm_ratio
+       call jfnk_gcr_solver(gcr_actual,sweeps_actual,roc)
+
+     endif
+    !------------------------------------------------
+
+!   Update the solution: u_new = u_old + du
+    call update_solution_du      ! -> This updates node(:)%u.
+	
+	total_steps = i_iteration
+
+!   Go to the next iteration
+    cycle iteration	
 
   endif method
 
@@ -229,6 +332,73 @@
   write(*,*) "Finished the Euler solver... Bye!"
 
  end subroutine euler_solver_main
+!--------------------------------------------------------------------------------
+
+!********************************************************************************
+!* This subroutine print out in the screen the residual history and associated
+!* data.
+!*
+!********************************************************************************
+ subroutine report_res_norm(CFL,res_norm,res_norm1_pre,sweeps,gcr,roc)
+
+ use edu2d_constants   , only : p2
+ use edu2d_my_main_data, only : i_iteration, nq, max_projection_gcr
+
+ implicit none
+ real(p2)                 , intent(in) :: CFL, roc
+ real(p2), dimension(nq,3), intent(in) :: res_norm
+ real(p2), dimension(nq)  , intent(in) :: res_norm1_pre
+
+ integer                               :: k, sweeps, gcr
+ real(p2), dimension(nq)               :: cr
+
+ !Below, we print out only the first 3 components of res_norm and cr
+ !because the equations we consider in this code has 3 equations.
+
+   write(*,'(a10,es9.2, a9,i10,a12,4es12.2)') &
+           "CFL=", CFL, "steps=", i_iteration, " L1(res)=",res_norm(:,1)
+
+ !Compute the convergence rate:
+ ! The ratio of the current residual norm to the previous one for each equation.
+ ! So, it should be less than 1.0 if converging.
+
+   do k = 1, nq
+
+    if (res_norm1_pre(k) > 1.0e-15) then
+     cr(k) = res_norm(k,1)/res_norm1_pre(k)
+    else
+     cr(k) = res_norm(k,1) !To avoid zero division.
+    endif
+
+   end do
+
+ !Print convergence rate ( = the ratio of the current residual norm to the previous one for each
+ !                             equation. So, it should be less than 1.0 if converging.)
+  if (i_iteration > 1) write(*,'(33x,a15,4f12.4)') "    c.r.: ", cr(1:nq)
+
+ !Print the number of sweeps/projections and the convergence rate.
+
+   !(1)Defect-Correction case (The case when max_projection_gcr  =0)
+   if (max_projection_gcr == 0) then
+
+    if (i_iteration > 0) write(*,'(27x,a14,i5,a,es8.2)') "GS(sweeps:cr)=", sweeps,":",roc
+
+   !(2)Newton-Krylov(GCR) case (The case when max_projection_gcr > 0)
+   elseif (max_projection_gcr > 0) then
+
+    if (i_iteration > 0) write(*,'(27x,a28,i5,a,i12,a,es8.2)') &
+                         "GCR(projections:sweeps:cr)=", gcr,":",sweeps,":",roc
+   else
+
+    ! max_projection_gcr < 0 has no meaning... Stop.
+
+    write(*,*) " Invalid value: max_projection_gcr = ", max_projection_gcr
+    write(*,*) " Set zero or positive integer, and try again. Stop..."
+    stop
+
+   endif
+
+ end subroutine report_res_norm
 !--------------------------------------------------------------------------------
 
 

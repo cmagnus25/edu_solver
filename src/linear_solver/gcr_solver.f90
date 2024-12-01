@@ -47,6 +47,8 @@ module gcr_solver
 
 private
 
+public :: jfnk_gcr_solver
+
 contains
 
  subroutine jfnk_gcr_solver(actual_projections,actual_sweeps,l2norm_ratio)
