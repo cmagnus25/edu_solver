@@ -3,19 +3,27 @@
 ########################################
 
 # Add the source files
-SET(FOO_src ${SRCFOO}/foo.f90
-            ${SRCFOO}/constants.f90
+SET(MAIN_src ${SRCMAIN}/edu2d_euler_steady_main_v0.f90
 )
 
 # Define the executable in terms of the source files
-ADD_EXECUTABLE(${FOOEXE} ${FOO_src})
+ADD_EXECUTABLE(${MAINEXE} ${MAIN_src})
+
+
+#TARGET_LINK_LIBRARIES(${MAINEXE} ${BARLIB})
+TARGET_LINK_LIBRARIES(${MAINEXE} ${BASICLIB})
+#TARGET_LINK_LIBRARIES(${MAINEXE} ${GRADLIB})
+TARGET_LINK_LIBRARIES(${MAINEXE} ${LINSOLVLIB})
+TARGET_LINK_LIBRARIES(${MAINEXE} ${JACLIB})
+#TARGET_LINK_LIBRARIES(${MAINEXE} ${RESLIB})
+TARGET_LINK_LIBRARIES(${MAINEXE} ${SOLVLIB})
 
 #####################################################
 # Add the needed libraries and special compiler flags
 #####################################################
 
 # This links foo to the bar library
-TARGET_LINK_LIBRARIES(${FOOEXE} ${BARLIB})
+#TARGET_LINK_LIBRARIES(${FOOEXE} ${BARLIB})
 
 # Uncomment if you need to link to BLAS and LAPACK
 #TARGET_LINK_LIBRARIES(${FOOEXE} ${BLAS_LIBRARIES}
@@ -44,4 +52,4 @@ IF(WIN32)
 ELSE()
     SET(CMAKE_INSTALL_PREFIX /usr/local)
 ENDIF(WIN32)
-INSTALL(TARGETS ${FOOEXE} RUNTIME DESTINATION bin)
+INSTALL(TARGETS ${MAINEXE} RUNTIME DESTINATION bin)

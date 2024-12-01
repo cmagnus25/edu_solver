@@ -47,26 +47,41 @@ ENDIF(FCNAME STREQUAL "pgf90")
 ############################################################
 
 # Define the executable name
-SET(TMPEXE edu2d)
+SET(MAINEXE edu2d)
 
 # Define the library name
-SET(BARLIB bar)
+#SET(BARLIB bar)
+SET(BASICLIB basic)
+#SET(GRADLIB gradient)
+SET(LINSOLVLIB linear_solver)
+SET(JACLIB jacobian)
+#SET(RESLIB residual)
+SET(SOLVLIB solver)
 
 # Define some directories
 SET(SRC ${CMAKE_SOURCE_DIR}/src)
 SET(LIB ${CMAKE_SOURCE_DIR}/lib)
 SET(BIN ${CMAKE_SOURCE_DIR}/bin)
-SET(SRCTMP ${SRC}/tmp)
-SET(SRCBAR ${SRC}/bar)
+SET(SRCMAIN ${SRC})
+SET(SRCBAS  ${SRC}/basic)
+#SET(SRCGRAD ${SRC}/gradient)
+SET(SRCLIN  ${SRC}/linear_solver)
+SET(SRCJAC  ${SRC}/jacobian)
+#SET(SRCRES  ${SRC}/residual)
+SET(SRCSOL  ${SRC}/solver)
 
 # Have the .mod files placed in the lib folder
 SET(CMAKE_Fortran_MODULE_DIRECTORY ${LIB})
 
 # The source for the BAR library and have it placed in the lib folder
-ADD_SUBDIRECTORY(${SRCBAR} ${LIB})
-
+ADD_SUBDIRECTORY(${SRCBAS}  ${LIB}/basic)
+#DD_SUBDIRECTORY(${SRCGRAD} ${LIB}/gradient)
+ADD_SUBDIRECTORY(${SRCLIN}  ${LIB}/linear_solver)
+ADD_SUBDIRECTORY(${SRCJAC}  ${LIB}/jacobian)
+#DD_SUBDIRECTORY(${SRCRES}  ${LIB}/residual)
+ADD_SUBDIRECTORY(${SRCSOL}  ${LIB}/solver)
 # The source for the FOO binary and have it placed in the bin folder
-ADD_SUBDIRECTORY(${SRCTMP} ${BIN})
+ADD_SUBDIRECTORY(${SRCMAIN} ${BIN})
 
 # Add a distclean target to the Makefile
 ADD_CUSTOM_TARGET(distclean 

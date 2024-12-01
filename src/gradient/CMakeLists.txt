@@ -1,0 +1,4 @@
+# gradient library
+SET(GRAD_src ${SRCGRAD}/gradients.f90
+)
+ADD_LIBRARY(${GRADLIB} STATIC ${GRAD_src})
