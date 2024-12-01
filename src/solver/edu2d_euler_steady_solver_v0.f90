@@ -87,7 +87,7 @@
 !--------------------------------------------------------------------------------
   call cpu_time( time_begin )
 
-  iteration : do i_iteration = 1, max_iterations
+  iteration : do i_iteration = 0, max_iterations-1
 
 !*********************************************************************
 !*********************************************************************
@@ -112,12 +112,12 @@
     call residual_norm(res_norm)
 
 !   Display the residual norm.
-    if (i_iteration==1) then
+    if (i_iteration==0) then
       write(*,'(a94)') "Density    X-momentum  Y-momentum   Energy"
     endif
 
-    if (mod(i_iteration-1,1)==0) write(*,'(a4,es12.2,a13,i6,a12,4es12.2)') &
-       "CFL=", CFLexp, "Iteration=", i_iteration-1, " L1(res)=",res_norm(:,1)
+    if (mod(i_iteration,1)==0) write(*,'(a4,es12.2,a13,i6,a12,4es12.2)') &
+       "CFL=", CFLexp, "Iteration=", i_iteration, " L1(res)=",res_norm(:,1)
 
 !   Stop if the L1 residual norm drops below the specified tolerance
     if (maxval(res_norm(:,1)) < tolerance) exit iteration
@@ -163,7 +163,7 @@
     if (i_iteration <= CFL_ramp_steps) then
 
      exp_factor = 0.5_p2
-       s = real( i_iteration-1, p2) / real( CFL_ramp_steps-1, p2)
+       s = real( i_iteration, p2) / real( CFL_ramp_steps, p2)
      CFL = CFL1 + (CFL2-CFL1)*( one - exp(-s*exp_factor) )/ ( one - exp(-exp_factor) )
 
     endif
@@ -175,12 +175,12 @@
     call residual_norm(res_norm) ! -> This computes res_norm.
 
 !   Display the residual norm.
-    if (i_iteration==1) then
+    if (i_iteration==0) then
       write(*,'(a101)') "Density    X-momentum  Y-momentum   Energy"
     endif
 
-    if (mod(i_iteration-1,1)==0) write(*,'(a4,f20.2,a13,i6,a12,4es12.2)') &
-       "CFL=", CFL, "iteration=", i_iteration-1, " L1(res)=",res_norm(:,1)
+    if (mod(i_iteration,1)==0) write(*,'(a4,f20.2,a13,i6,a12,4es12.2)') &
+       "CFL=", CFL, "iteration=", i_iteration, " L1(res)=",res_norm(:,1)
 
 !   Stop if the L1 residual norm drops below the specified tolerance for all eqns.
     if (maxval(res_norm(:,1)) < tolerance) exit iteration
@@ -217,14 +217,14 @@
   write(*,*) " Total CPU time to solution = ", time_end - time_begin, " seconds"
   write(*,*)
 
-  if (i_iteration == max_iterations) then
+  if (i_iteration == max_iterations-1) then
    write(*,*) " Not converged... Sorry..."
    write(*,*) "   Max iterations reached... max_iterations=", max_iterations
    write(*,*) "   Increase max_iterations, and try again."
   endif
 
   write(*,*) " Converged."
-  write(*,*) " Final iteration      =", i_iteration-1
+  write(*,*) " Final iteration      =", i_iteration
   write(*,*)
   write(*,*) "Finished the Euler solver... Bye!"
 
