@@ -56,7 +56,7 @@
 !Implicit method uses subroutines below to construct Jacobian matrix
 !and relax the linear system.
  use edu2d_euler_jacobian    , only : construct_jacobian_ncfv ! Construct Jacobian
- use edu2d_euler_linear_solve, only : gs_sequential           ! GS relaxaton for linear system
+ use edu2d_euler_linear_solve, only : gs_sequential, gs_sequential2 ! GS relaxaton for linear system
  use residual, only : compute_residual_ncfv
 
  implicit none
@@ -69,6 +69,8 @@
  integer                               :: i
  real(p2)                              :: time_begin    !Starting time
  real(p2)                              :: time_end      !End time
+ integer                               :: sweeps_actual
+ real(p2)                              :: roc
 
 ! For explicit scheme:
 !  1. Allocate the temporary solution array needed for the Runge-Kutta method.
@@ -194,7 +196,8 @@
 
 !   Relax the linear system by sequential Gauss-Seidel to get du (Correction)
 !   Note: This subroutine can be found in edu2d_euler_inear_solve_v0.f90
-    call gs_sequential           ! -> This relaxes the linear system and compute du.
+    !call gs_sequential           ! -> This relaxes the linear system and compute du.
+    call gs_sequential2(sweeps_actual,roc) ! -> This relaxes the linear system and compute du.
 
 !   Update the solution: u_new = u_old + du
     call update_solution_du      ! -> This updates node(:)%u.

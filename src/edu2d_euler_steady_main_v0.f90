@@ -133,7 +133,7 @@
  use edu2d_grid_data    , only : read_grid, construct_grid_data, check_grid_data
  use edu2d_my_main_data , only : nq, M_inf, gamma, iteration_method,         &
                                  CFLexp, CFL1, CFL2, CFL_ramp_steps, sweeps, &
-                                 tolerance, max_iterations,                  &    
+                                 tolerance, tolerance_linear, max_iterations,&    
                                  inviscid_flux, inviscid_jac,                &
                                  jac, nnodes, node, gradient_type, gradient_weight, gradient_weight_p
 
@@ -188,7 +188,8 @@
             sweeps = 15         ! Number of linear GS sweeps for implicit method
 
          tolerance = 1.0e-15_p2 ! Residual tolerance for steady computations
-    max_iterations = 10000      ! Max number of iterations
+  tolerance_linear = 1.0e-1_p2 ! Residual tolerance for linear system
+    max_iterations = 1000      ! Max number of iterations
 
 !  Sorry, but only the Roe flux is implemented in this code.
 
@@ -206,10 +207,10 @@
 ! Note: The implicit solver becomes Newton's method for first-order scheme.
 !       You can try it with the following setting:
 !
-!              CFL1 = 1.0e+15_p2
-!              CFL2 = 1.0e+15_p2
-!            sweeps = 250
-!     gradient_type = "none"
+!             CFL1 = 1.0e+15_p2
+!             CFL2 = 1.0e+15_p2
+!           sweeps = 250
+!    gradient_type = "none"
 !
 !-----------------------------------------------------------------------------
 
@@ -231,6 +232,7 @@
   write(*,*) "                 sweeps = ", sweeps
   write(*,*)
   write(*,*) "              tolerance = ", tolerance
+  write(*,*) "       tolerance_linear = ", tolerance_linear
   write(*,*) "         max_iterations = ", max_iterations
   write(*,*)
   write(*,*) "          inviscid_flux = ", trim(inviscid_flux)
@@ -265,6 +267,7 @@
          allocate(jac(nnodes))
        do i = 1, nnodes
          allocate( jac(i)%diag(nq,nq)                 ) ! Diagonal block
+		 allocate( jac(i)%diag_inverse(nq,nq)         ) ! Inverse Diagonal block
          allocate( jac(i)%off( nq,nq, node(i)%nnghbrs)) ! Off-diagonal block
        end do
       endif

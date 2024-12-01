@@ -280,6 +280,7 @@
   type jac_type
 !  to be constructed in the code
    real(p2),  dimension(:,:)  , pointer :: diag ! diagonal block of Jacobian matrix
+   real(p2),  dimension(:,:)  , pointer :: diag_inverse ! diagonal block of Jacobian matrix
    real(p2),  dimension(:,:,:), pointer :: off  ! off-diagonal block of Jacobian matrix
   end type jac_type
 
@@ -332,7 +333,7 @@
   public :: M_inf, rho_inf, u_inf, v_inf, p_inf 
   public :: gamma
 
-  public :: tolerance, max_iterations
+  public :: tolerance, tolerance_linear, max_iterations
   public :: jac
   public :: iteration_method
   public :: CFL, CFLexp, CFL1, CFL2, CFL_ramp_steps
@@ -363,6 +364,7 @@
    !Implicit solver parameters
     integer       :: max_iterations      ! Maximum number of iterations
     real(p2)      :: tolerance           ! Tolerance for steady convergence
+	real(p2)      :: tolerance_linear    ! Tolerance for steady convergence
     real(p2)      :: CFL                 ! Actual CFL number 
     character(80) :: iteration_method    ! explicit or implicit
     character(80) :: inviscid_jac        ! Inviscid flux for Jacobian
