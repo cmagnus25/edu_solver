@@ -333,13 +333,17 @@
   public :: M_inf, rho_inf, u_inf, v_inf, p_inf 
   public :: gamma
 
+  public :: i_iteration
   public :: tolerance, tolerance_linear, max_iterations
   public :: jac
   public :: iteration_method
   public :: CFL, CFLexp, CFL1, CFL2, CFL_ramp_steps
   public :: sweeps
+  public :: my_eps
 
 !  Parameters
+
+   real(p2)       :: my_eps = epsilon(one) ! Machine zero
 
    !Number of equtaions/variables in the target equtaion.
    integer       :: nq 
@@ -359,9 +363,10 @@
    real(p2) :: gamma = 1.4_p2
 
    !Parameter for explicit scheme
-         real(p2) :: CFLexp              ! Input CFL number for explicit RK2 scheme
+    real(p2) :: CFLexp              ! Input CFL number for explicit RK2 scheme
 
    !Implicit solver parameters
+    integer       :: i_iteration         ! Iteration counter (nonlinear iteration)
     integer       :: max_iterations      ! Maximum number of iterations
     real(p2)      :: tolerance           ! Tolerance for steady convergence
 	real(p2)      :: tolerance_linear    ! Tolerance for steady convergence

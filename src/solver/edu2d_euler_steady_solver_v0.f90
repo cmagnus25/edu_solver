@@ -51,7 +51,7 @@
  use edu2d_constants   , only : p2, one, half
 
  use edu2d_my_main_data, only : CFL, nnodes, node, tolerance, cfl1, cfl2, CFL_ramp_steps, &
-                                iteration_method, max_iterations, CFLexp, nq
+                                iteration_method, max_iterations, CFLexp, nq, i_iteration
 
 !Implicit method uses subroutines below to construct Jacobian matrix
 !and relax the linear system.
@@ -64,7 +64,6 @@
 !Local variables
  real(p2), dimension(nq,3)             :: res_norm      !Residual norms(L1,L2,Linf)
  real(p2), dimension(:,:), allocatable :: u0            !Saved solution
- integer                               :: i_iteration   !Iteration counter
  real(p2)                              :: s, exp_factor !CFL ramping variables
  integer                               :: i
  real(p2)                              :: time_begin    !Starting time

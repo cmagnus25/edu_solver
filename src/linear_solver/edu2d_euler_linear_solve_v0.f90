@@ -163,7 +163,7 @@
 
  use edu2d_constants   , only : p2, zero
  use edu2d_my_main_data, only : nnodes, node, jac, sweeps, nq, &
-                                tolerance_linear  !, i_iteration
+                                tolerance_linear, i_iteration
  use gaussian_elimination, only : gewp_solve
 
  implicit none
@@ -185,7 +185,7 @@
 
             omega = 1.0_p2
 
- !write(1000,*) "DC Iteration = ", i_iteration
+ write(1000,*) "DC Iteration = ", i_iteration
 
  sweeps_actual = 0
 
@@ -280,7 +280,7 @@
     if (ii==1) then
 
      linear_res_norm_initial = linear_res_norm
-     !write(*,'(a,i10,a,es12.5)') " relax ", ii, " max(L1 norm) = ", maxval(linear_res_norm(:,1))
+	 write(1000,'(a,i10,a,es12.5)') " relax ", ii, " max(L1 norm) = ", maxval(linear_res_norm(:,1))
 
    !Check convergence from the second sweep.
     else
@@ -289,11 +289,13 @@
 
      !write(*,'(a,i10,a,3es12.5,2f10.3,2f10.3)') " relax ", ii, &
      !      " max(L1 norm) = ", linear_res_norm(:,1), roc, omega
+	      write(1000,'(a,i10,a,3es12.5,2f10.3,2f10.3)') " relax ", ii, &
+           " max(L1 norm) = ", linear_res_norm(:,1), roc, omega
 
        !Tolerance met. Good!
        if (roc < tolerance_linear .or. &
            maxval(linear_res_norm(:,1)) < 1.0e-17 ) then
-       write(*,*) " Linear tolerance met, Sweeps =  = ", ii, " tol = ",tolerance_linear, " roc= ", roc
+       write(1000,*) " Tolerance met. Exit GS relaxation. Total sweeps = ", ii, tolerance_linear
        sweeps_actual = ii
        exit relax
 
@@ -301,7 +303,7 @@
        else
 
         if (ii == sweeps) then
-         write(*,*) " Linear tolerance not met, Sweeps = ", sweeps, " tol = ",tolerance_linear, " roc= ", roc
+         write(1000,*) " Tolerance not met... sweeps = ", sweeps
          sweeps_actual = sweeps
         endif
 
@@ -319,7 +321,7 @@
 !--------------------------------------------------------------------------------
 
 
- !   write(*,*)
+  write(1000,*)
 
  end subroutine gs_sequential2
 !--------------------------------------------------------------------------------
