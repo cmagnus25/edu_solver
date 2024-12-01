@@ -334,16 +334,18 @@
   public :: gamma
 
   public :: i_iteration
-  public :: tolerance, tolerance_linear, max_iterations
+  public :: tolerance, tolerance_linear, tolerance_gcr, max_iterations
   public :: jac
   public :: iteration_method
+  public :: max_projection_gcr
   public :: CFL, CFLexp, CFL1, CFL2, CFL_ramp_steps
-  public :: sweeps
+  public :: CFL_frechet
+  public :: sweeps, sweeps_actual_gcr
   public :: my_eps
 
 !  Parameters
 
-   real(p2)       :: my_eps = epsilon(one) ! Machine zero
+   real(p2)      :: my_eps = epsilon(one) ! Machine zero
 
    !Number of equtaions/variables in the target equtaion.
    integer       :: nq 
@@ -369,13 +371,17 @@
     integer       :: i_iteration         ! Iteration counter (nonlinear iteration)
     integer       :: max_iterations      ! Maximum number of iterations
     real(p2)      :: tolerance           ! Tolerance for steady convergence
-	real(p2)      :: tolerance_linear    ! Tolerance for steady convergence
+    real(p2)      :: tolerance_linear    ! Tolerance for steady convergence
+    real(p2)      :: tolerance_gcr       ! Tolerance for gcr non-linear solver
     real(p2)      :: CFL                 ! Actual CFL number 
     character(80) :: iteration_method    ! explicit or implicit
     character(80) :: inviscid_jac        ! Inviscid flux for Jacobian
     real(p2)      :: CFL1, CFL2          ! Initial and terminal CFL number for ramping
+    real(p2)      :: CFL_frechet         ! CFL number used in the Frechet derivative in NK-GCR.
     integer       :: CFL_ramp_steps      ! Number of iterations to reach CFL2 from CFL1
     integer       :: sweeps              ! Number of GS relaxation
+    integer       :: sweeps_actual_gcr   ! 
+    integer       :: max_projection_gcr  ! Maximum number of projections in gcr solver
 
 !  Node data
    integer                                 :: nnodes !total number of nodes
