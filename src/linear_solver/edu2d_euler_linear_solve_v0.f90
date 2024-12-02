@@ -22,6 +22,7 @@
 
  public :: gs_sequential
  public :: gs_sequential2
+ public :: sgs_sequential
 
  contains
 
@@ -277,5 +278,170 @@
   write(1000,*)
 
  end subroutine gs_sequential2
+!--------------------------------------------------------------------------------
+!--------------------------------------------------------------------------------
+
+
+
+!********************************************************************************
+!********************************************************************************
+!********************************************************************************
+!********************************************************************************
+!********************************************************************************
+!* This subroutine relaxes the linear system, Jac*du = -Res,
+!* by the sequential Symmetric-Gauss-Seidel relaxation scheme.
+!*
+!* ------------------------------------------------------------------------------
+!*  Input:         jac = Jacobian matirx (left hand side)
+!*         node(:)%res = Residual (right hand side)
+!*              sweeps = The number of GS sweeps to be performed
+!*    tolerance_linear = Tolerance on the linear residual
+!*
+!*
+!* Output: node(:)%du  = Correction
+!*       sweeps_actual = Number of sweeps performed
+!*                 roc = Rate of convergence (the ratio of the final linear residual
+!*                       to the initial linear residual), showing how much it is
+!*                       reduced. Tolerance is typically 1 order of magnitude.
+!* ------------------------------------------------------------------------------
+!*
+!********************************************************************************
+ subroutine sgs_sequential(sweeps_actual,roc)
+
+ use edu2d_constants   , only : p2, zero
+ use edu2d_my_main_data, only : nnodes, node, jac, sweeps, nq, &
+                                tolerance_linear, i_iteration
+
+ implicit none
+
+ integer , intent(out)      :: sweeps_actual
+ real(p2), intent(out)      :: roc
+
+!Local variables
+ real(p2), dimension(nq,nq) :: inverse
+ real(p2), dimension(nq)    :: b, x
+ integer                    :: i, k, idestat
+
+ integer                    :: ii, kth_nghbr
+ real(p2), dimension(nq,3)  :: linear_res_norm !Residual norms(L1,L2,Linf) for the linear system
+ real(p2), dimension(nq,3)  :: linear_res_norm_initial
+ real(p2), dimension(nq,3)  :: linear_res_norm_previous
+
+ write(1000,*) "DC Iteration = ", i_iteration
+
+ sweeps_actual = 0
+
+!--------------------------------------------------------------------------------
+! 1. Initialize the correction
+
+  nodes1 : do i = 1, nnodes
+   node(i)%du = zero
+  end do nodes1
+!--------------------------------------------------------------------------------
+! 2. Linear Relaxation (Sweep)
+
+  relax : do ii = 1, sweeps
+
+!----------------------------------------------------
+!   Forward Sweep
+   linear_res_norm(:,1) = zero
+
+   nodes2 : do i = 1, nnodes
+
+!   Form the right hand side of GS: [ sum( off_diagonal_block*du ) - residual ]
+
+     b = node(i)%res ! Residual has already been given the minus sign.
+
+    do k = 1, node(i)%nnghbrs
+
+     kth_nghbr = node(i)%nghbr(k)
+     b = b - matmul(jac(i)%off(:,:,k), node(kth_nghbr)%du)
+
+    end do
+
+!   Update du by the GS relaxation (with a relaxation parameter, omega)
+
+     b = matmul( jac(i)%diag_inverse, b ) - node(i)%du
+	 !linear_res_norm(:,1) = linear_res_norm(:,1) + abs( b(:) )
+     node(i)%du = node(i)%du + b
+
+   end do nodes2
+!
+!   Backward sweep
+! 
+   nodes3 : do i = nnodes, 1, -1
+
+!   Form the right hand side of GS: [ sum( off_diagonal_block*du ) - residual ]
+
+     b = node(i)%res ! Residual has already been given the minus sign.
+
+    do k = 1, node(i)%nnghbrs
+
+     kth_nghbr = node(i)%nghbr(k)
+     b = b - matmul(jac(i)%off(:,:,k), node(kth_nghbr)%du)
+
+    end do
+
+!   Update du by the GS relaxation (with a relaxation parameter, omega)
+
+     b = matmul( jac(i)%diag_inverse, b ) - node(i)%du
+	 linear_res_norm(:,1) = linear_res_norm(:,1) + abs( b(:) )
+     node(i)%du = node(i)%du + b
+
+   end do nodes3
+   
+   linear_res_norm(:,1) = linear_res_norm(:,1) / real(nnodes, p2)
+
+!    End of Sequential Symmetric-Gauss-Seidel Relaxation(sweep)
+!----------------------------------------------------
+
+   !Skip the first relaxation
+    if (ii==1) then
+
+     linear_res_norm_initial = linear_res_norm
+	 write(1000,'(a,i10,a,es12.5)') " relax ", ii, " max(L1 norm) = ", maxval(linear_res_norm(:,1))
+
+   !Check convergence from the second sweep.
+    else
+
+      roc = maxval(linear_res_norm(:,1)/linear_res_norm_initial(:,1))
+
+     !write(*,'(a,i10,a,3es12.5,2f10.3,2f10.3)') " relax ", ii, &
+     !      " max(L1 norm) = ", linear_res_norm(:,1), roc, omega
+	      write(1000,'(a,i10,a,3es12.5,2f10.3,2f10.3)') " relax ", ii, &
+           " max(L1 norm) = ", linear_res_norm(:,1), roc, 1.0
+
+       !Tolerance met. Good!
+       if (roc < tolerance_linear .or. &
+           maxval(linear_res_norm(:,1)) < 1.0e-17 ) then
+       write(1000,*) " Tolerance met. Exit GS relaxation. Total sweeps = ", ii, tolerance_linear
+       sweeps_actual = ii
+       exit relax
+
+       !Maximum sweep reached... Not converged...
+       else
+
+        if (ii == sweeps) then
+         write(1000,*) " Tolerance not met... sweeps = ", sweeps
+         sweeps_actual = sweeps
+        endif
+
+       endif
+
+    endif
+
+!----------------------------------------------------------------------------------------
+
+    linear_res_norm_previous = linear_res_norm
+
+  end do relax
+
+!    End of Linear Relaxation (Sweep)
+!--------------------------------------------------------------------------------
+
+
+  write(1000,*)
+
+ end subroutine sgs_sequential
 !--------------------------------------------------------------------------------
  end module edu2d_euler_linear_solve
