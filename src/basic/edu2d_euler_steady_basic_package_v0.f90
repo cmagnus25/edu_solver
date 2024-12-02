@@ -342,6 +342,7 @@
   public :: CFL_frechet
   public :: sweeps, sweeps_actual_gcr
   public :: my_eps
+  public :: smooth_method
 
 !  Parameters
 
@@ -382,6 +383,7 @@
     integer       :: sweeps              ! Number of GS relaxation
     integer       :: sweeps_actual_gcr   ! 
     integer       :: max_projection_gcr  ! Maximum number of projections in gcr solver
+    character(80) :: smooth_method       ! GS or SGS smoothing scheme
 
 !  Node data
    integer                                 :: nnodes !total number of nodes

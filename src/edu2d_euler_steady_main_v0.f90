@@ -136,7 +136,8 @@
                                  tolerance, tolerance_linear, max_iterations,&    
                                  inviscid_flux, inviscid_jac, tolerance_gcr, &
                                  jac, nnodes, node, gradient_type, gradient_weight,&
-                                 gradient_weight_p, max_projection_gcr
+                                 gradient_weight_p, max_projection_gcr, &
+								 smooth_method
 
  use edu2d_euler_implct_solver, only : euler_solver_main
  use gradients_lsq, only : compute_lsq_coeff_nc, check_lsq_coeff_nc
@@ -174,7 +175,8 @@
              gamma = 1.4_p2     ! Ratio of specific heats
 
   iteration_method = "implicit_gcr" ! Solution method: "explicit" or "implicit"
-
+     smooth_method = "sgs"      ! gs or sgs, smoothing method
+	 
 !  For explicit scheme (2-staege Runge-Kutta)
 
             CFLexp = 0.99_p2    ! CFL for expicit method (RK2); must be small
@@ -186,14 +188,14 @@
               CFL1 = 1.0e+1_p2  ! Initial CFL for implicit method
               CFL2 = 1.0e+5_p2  !   Final CFL for implicit method
     CFL_ramp_steps = 10         ! Number of iterations to reach from CFL1 to CFL2
-            sweeps = 500        ! Number of linear GS sweeps for implicit method
+            sweeps = 30        ! Number of linear GS sweeps for implicit method
 
          tolerance = 1.0e-15_p2 ! Residual tolerance for steady computations
   tolerance_linear = 0.5e+0_p2  ! Residual tolerance for linear system
      tolerance_gcr = 1.0e-1_p2  !
-    max_iterations = 100        ! Max number of iterations
+    max_iterations = 20         ! Max number of iterations
 max_projection_gcr = 30         ! Max projections for GCR (larger->more expensive/memory)
-
+	  
 !  Sorry, but only the Roe flux is implemented in this code.
 
      inviscid_flux = "roe"      ! "roe" - Roe flux only. You can add others.

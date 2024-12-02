@@ -18,7 +18,7 @@ module precond
 
  use edu2d_constants   , only : p2
  use edu2d_my_main_data, only : nq, nnodes, node, sweeps_actual_gcr
- use edu2d_euler_linear_solve, only : gs_sequential2, sgs_sequential
+ use edu2d_euler_linear_solve, only : smooth
 
  implicit none
 
@@ -54,10 +54,9 @@ module precond
 !                    which is the implciit Defect Correction solver.
 
 ! Relax Jac*du = r by sequential/multicolor GS.
-  !call gs_sequential2(sweeps_actual,roc) !This will compute node(:)%du(:).
-  call sgs_sequential(sweeps_actual,roc) !This will compute node(:)%du(:).
+  call smooth(sweeps_actual,roc) !This will compute node(:)%du(:).
   write(2000,*) "preconditioning:", sweeps_actual,":",roc
-  write(*,'(27x,a32,i5,a,es8.2,a5,es10.2,a5,es10.2)') " - preconditioner: GS(sweeps:cr)=", &
+  write(*,'(27x,a32,i5,a,es8.2,a5,es10.2,a5,es10.2)') " - preconditioner: Smooth(sweeps:cr)=", &
   sweeps_actual,":",roc
   sweeps_actual_gcr = sweeps_actual_gcr + sweeps_actual
 

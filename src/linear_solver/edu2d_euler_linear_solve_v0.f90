@@ -20,12 +20,31 @@
 
  private
 
- public :: gs_sequential
- public :: gs_sequential2
- public :: sgs_sequential
-
+ public :: smooth
+ 
  contains
-
+ 
+ subroutine smooth(sweeps_actual,roc)
+ 
+ use edu2d_constants   , only : p2
+ use edu2d_my_main_data, only : smooth_method
+ 
+ implicit none
+ integer , intent(out)      :: sweeps_actual
+ real(p2), intent(out)      :: roc
+ 
+ select case(trim(smooth_method))
+ 
+ case("gs")
+   call gs_sequential2(sweeps_actual,roc)
+ case("sgs")
+   call sgs_sequential(sweeps_actual,roc)
+ case default
+   write(*,*) " Invalid smooting scheme ... Stop"
+   stop
+ end select
+ 
+ end subroutine smooth
 !********************************************************************************
 !* This subroutine relaxes the linear system by Sequential Gauss-Seidel
 !*
