@@ -164,7 +164,6 @@
  use edu2d_constants   , only : p2, zero
  use edu2d_my_main_data, only : nnodes, node, jac, sweeps, nq, &
                                 tolerance_linear, i_iteration
- use gaussian_elimination, only : gewp_solve
 
  implicit none
 
@@ -195,43 +194,14 @@
   nodes1 : do i = 1, nnodes
    node(i)%du = zero
   end do nodes1
-
 !--------------------------------------------------------------------------------
-! 2. Invert the diagonal block and store it (replace jac(i)%diag by its inverse)
-
-   nodes2 : do i = 1, nnodes
-
-!   b is just a dummy variable here.
-
-     b = zero
-
-!   Invert the diagonal block at node i by Gauss elimination with pivoting.
-!   Note: gewp_solve() actually solves a linear system, Ax=b, but here
-!         we use it only to obtain the inverse of A. So, b is a dummy.
-
-!             Ax=b ->          A  b     x   A^{-1}
-    call gewp_solve( jac(i)%diag, b, x, inverse, idestat, nq )
-
-!   Report errors
-
-    if (idestat/=0) then
-     write(*,*) " Error in inverting the diagonal block... Stop..."
-     stop
-    endif
-
-!   Save the inverse of the diagonal block.
-
-    jac(i)%diag_inverse = inverse
-
-   end do nodes2
-
-!--------------------------------------------------------------------------------
-! 3. Linear Relaxation (Sweep)
+! 2. Linear Relaxation (Sweep)
 
   relax : do ii = 1, sweeps
 
 !----------------------------------------------------
 !    Sequential Gauss-Seidel Relaxation (sweep)
+   linear_res_norm(:,1) = zero
 
    nodes3 : do i = 1, nnodes
 
@@ -249,32 +219,15 @@
 !   Update du by the GS relaxation (with a relaxation parameter, omega)
 
      b = matmul( jac(i)%diag_inverse, b ) - node(i)%du
+	 linear_res_norm(:,1) = linear_res_norm(:,1) + abs( b(:) )
      node(i)%du = node(i)%du + omega * b
 
    end do nodes3
+   
+   linear_res_norm(:,1) = linear_res_norm(:,1) / real(nnodes, p2)
 
 !    End of 1 Sequential Gauss-Seidel Relaxation(sweep)
 !----------------------------------------------------
-
-!----------------------------------------------------
-!  Check convergence.
-
-   !Compute the L1 norm of the residuals (for the linear system): res = A^{-1}*b-x.
-   linear_res_norm(:,1) = zero
-
-   nodes4 : do i = 1, nnodes
-     b = node(i)%res
-    do k = 1, node(i)%nnghbrs
-     kth_nghbr = node(i)%nghbr(k)
-     b = b - matmul(jac(i)%off(:,:,k), node(kth_nghbr)%du)
-    end do
-     b = matmul( jac(i)%diag_inverse, b ) - node(i)%du
-
-    linear_res_norm(:,1) = linear_res_norm(:,1) + abs( b(:) )
-
-   end do nodes4
-
-    linear_res_norm(:,1) = linear_res_norm(:,1) / real(nnodes, p2)
 
    !Skip the first relaxation
     if (ii==1) then

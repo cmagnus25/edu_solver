@@ -102,6 +102,8 @@
  use edu2d_my_main_data, only : nnodes, node, nedges, edge, nbound, bound, &
                                 rho_inf, u_inf, v_inf, p_inf, &
                                 jac, inviscid_jac
+ use gaussian_elimination, only : gewp_solve
+ 
  implicit none
 
 !Local variables
@@ -115,6 +117,8 @@
 
  real(p2), dimension(4)   :: w_out, u_out     !State outside the domain.
  real(p2), dimension(4,4) :: dFnducL, dFnducR !Flux Jacobian matrices
+ real(p2), dimension(4)   :: b, x
+ integer                  :: idestat
 !-------------------------------------------------------------------------
 ! Jacobian computation
 
@@ -310,6 +314,13 @@
    jac(i)%diag(2,2) = jac(i)%diag(2,2) + node(i)%vol / node(i)%dt
    jac(i)%diag(3,3) = jac(i)%diag(3,3) + node(i)%vol / node(i)%dt
    jac(i)%diag(4,4) = jac(i)%diag(4,4) + node(i)%vol / node(i)%dt
+   
+   b = zero
+   call gewp_solve( jac(i)%diag, b, x, jac(i)%diag_inverse, idestat, 4 )
+   if (idestat/=0) then
+     write(*,*) " Error in inverting the diagonal block... Stop..."
+     stop
+   endif
 
   end do nodes2
 
