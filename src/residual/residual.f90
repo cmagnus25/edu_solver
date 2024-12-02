@@ -26,10 +26,10 @@ module residual
 
  use edu2d_constants   , only : p2, zero, half
  use edu2d_my_main_data, only : nnodes, node, nedges, edge, nbound, bound, &
-                          rho_inf, u_inf, v_inf, p_inf, &
-                          inviscid_flux, nq, gradient_type
- use gradients_lsq, only : compute_gradient_nc
- use roe_scheme, only : roe
+                                rho_inf, u_inf, v_inf, p_inf, nq 
+ use input_parameter, only : inviscid_flux, gradient_type 						  
+ use gradients_lsq  , only : compute_gradient_nc
+ use roe_scheme     , only : roe
  
  implicit none
 

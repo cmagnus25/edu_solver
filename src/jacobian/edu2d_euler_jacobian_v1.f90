@@ -101,7 +101,8 @@
 
  use edu2d_my_main_data, only : nnodes, node, nedges, edge, nbound, bound, &
                                 rho_inf, u_inf, v_inf, p_inf, &
-                                jac, inviscid_jac
+                                jac
+ use input_parameter     , only : inviscid_jac
  use gaussian_elimination, only : gewp_solve
  
  implicit none
@@ -1414,7 +1415,7 @@
  function w2u(w) result(u)
 
  use edu2d_constants   , only : p2, one, half
- use edu2d_my_main_data, only : gamma
+ use input_parameter   , only : gamma
 
  implicit none
 

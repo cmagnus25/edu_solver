@@ -30,7 +30,6 @@
  private
 
  public :: euler_solver_main
- public :: w2u
 
  contains
 
@@ -50,9 +49,10 @@
 
  use edu2d_constants   , only : p2, one, half
 
- use edu2d_my_main_data, only : CFL, nnodes, node, tolerance, CFL1, CFL2, CFL_ramp_steps, &
-                                iteration_method, max_iterations, CFLexp, nq, i_iteration, &
-								max_projection_gcr
+ use edu2d_my_main_data, only : CFL, nnodes, node, nq, i_iteration
+ use input_parameter   , only : tolerance, CFL1, CFL2, CFL_ramp_steps, &
+                                iteration_method, max_iterations, &
+                                CFLexp, max_projection_gcr
 
 !Implicit method uses subroutines below to construct Jacobian matrix
 !and relax the linear system.
@@ -341,7 +341,8 @@
  subroutine report_res_norm(CFL,res_norm,res_norm1_pre,sweeps,gcr,roc)
 
  use edu2d_constants   , only : p2
- use edu2d_my_main_data, only : i_iteration, nq, max_projection_gcr
+ use edu2d_my_main_data, only : i_iteration, nq 
+ use input_parameter,    only : max_projection_gcr
 
  implicit none
  real(p2)                 , intent(in) :: CFL, roc
@@ -419,7 +420,8 @@
  subroutine update_solution(coeff)
 
  use edu2d_constants   , only : p2, zero
- use edu2d_my_main_data, only : nnodes, node, M_inf
+ use edu2d_my_main_data, only : nnodes, node
+ use input_parameter,    only : M_inf
  use vector_operations,  only : u2w, w2u
 
  implicit none
@@ -498,7 +500,8 @@
  subroutine update_solution_du
 
  use edu2d_constants   , only : p2, zero
- use edu2d_my_main_data, only : nnodes, node, M_inf
+ use edu2d_my_main_data, only : nnodes, node 
+ use input_parameter,    only : M_inf
  use vector_operations,  only : u2w, w2u
 
  implicit none

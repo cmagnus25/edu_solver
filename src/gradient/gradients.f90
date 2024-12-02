@@ -46,7 +46,7 @@
  private
 
  public :: compute_lsq_coeff_nc
- public ::   check_lsq_coeff_nc
+ public :: check_lsq_coeff_nc
  public :: compute_gradient_nc
 
  contains
@@ -689,7 +689,7 @@
  function lsq_weight(dx, dy)
 
  use edu2d_constants   , only : p2, one
- use edu2d_my_main_data, only : gradient_weight, gradient_weight_p
+ use input_parameter   , only : gradient_weight, gradient_weight_p
 
  implicit none
 

@@ -131,25 +131,16 @@
 
  use edu2d_constants    , only : p2, zero
  use edu2d_grid_data    , only : read_grid, construct_grid_data, check_grid_data
- use edu2d_my_main_data , only : nq, M_inf, gamma, iteration_method,         &
-                                 CFLexp, CFL1, CFL2, CFL_ramp_steps, sweeps, &
-                                 tolerance, tolerance_linear, max_iterations,&    
-                                 inviscid_flux, inviscid_jac, tolerance_gcr, &
-                                 jac, nnodes, node, gradient_type, gradient_weight,&
-                                 gradient_weight_p, max_projection_gcr, &
-								 smooth_method
+ use edu2d_my_main_data , only : jac, nnodes, node, nq
+								 
+ use input_parameter ,    only : iteration_method, datafile_grid_in, &
+                                 datafile_bcmap_in, datafile_tec, &
+								 read_nml_input_parameters								 
 
  use edu2d_euler_implct_solver, only : euler_solver_main
  use gradients_lsq, only : compute_lsq_coeff_nc, check_lsq_coeff_nc
  
  implicit none
-
-!Inout data files
- character(80) :: datafile_grid_in  !Grid file
- character(80) :: datafile_bcmap_in !Boundary condition specification file
-
-!Output data file
- character(80) :: datafile_tec      !Tecplot file for viewing the result
 
 !Local variables
  integer       :: i
@@ -158,97 +149,8 @@
   write(*,*) " Starting EDU2D-Euler-Steady "
   write(*,*) "***************************************************************"
 
-!--------------------------------------------------------------------------------
-! Set file names
-
-! Input files
-  datafile_grid_in  = 'bump.grid'
-  datafile_bcmap_in = 'bump.bcmap'
-
-! Output file
-  datafile_tec      = 'bump_solution_tecplot.dat'
-
-!--------------------------------------------------------------------------------
-! Input Parameters
-
-            M_inf  = 0.3_p2     ! Free stream Mach number
-             gamma = 1.4_p2     ! Ratio of specific heats
-
-  iteration_method = "implicit_gcr" ! Solution method: "explicit" or "implicit"
-     smooth_method = "sgs"      ! gs or sgs, smoothing method
-	 
-!  For explicit scheme (2-staege Runge-Kutta)
-
-            CFLexp = 0.99_p2    ! CFL for expicit method (RK2); must be small
-
-!  For implicit scheme (exact first-order Jacobian with a pseudo time term)
-!  Note: Explore various combinations of these parameters.
-!        E.g., Increase 'sweeps' to solve the linear system better.
-
-              CFL1 = 1.0e+1_p2  ! Initial CFL for implicit method
-              CFL2 = 1.0e+5_p2  !   Final CFL for implicit method
-    CFL_ramp_steps = 10         ! Number of iterations to reach from CFL1 to CFL2
-            sweeps = 30        ! Number of linear GS sweeps for implicit method
-
-         tolerance = 1.0e-15_p2 ! Residual tolerance for steady computations
-  tolerance_linear = 0.5e+0_p2  ! Residual tolerance for linear system
-     tolerance_gcr = 1.0e-1_p2  !
-    max_iterations = 20         ! Max number of iterations
-max_projection_gcr = 30         ! Max projections for GCR (larger->more expensive/memory)
-	  
-!  Sorry, but only the Roe flux is implemented in this code.
-
-     inviscid_flux = "roe"      ! "roe" - Roe flux only. You can add others.
-     inviscid_jac  = "roe"      ! "roe" - Roe flux Jacobian only. You can add others.
-
-                  nq = 4        ! The number of equtaions/variables in the target equtaion.
-                                ! This is 4 for 2D Euler equations.
-
-   gradient_type     = "linear" ! or "quadratic2 for a quadratic LSQ.
-   gradient_weight   = "none"   ! or "inverse_distance"
-   gradient_weight_p =  zero    ! or any other real value
-
-!-----------------------------------------------------------------------------
-! Note: The implicit solver becomes Newton's method for first-order scheme.
-!       You can try it with the following setting:
-!
-!             CFL1 = 1.0e+15_p2
-!             CFL2 = 1.0e+15_p2
-!           sweeps = 250
-!    gradient_type = "none"
-!
-!-----------------------------------------------------------------------------
-
-! Print out the input parameters just for a record.
-
-  write(*,*)
-  write(*,*) " Summary of Input Parameteres:"
-  write(*,*)
-  write(*,*) "                  M_inf = ", M_inf
-  write(*,*) "                  gamma = ", gamma
-  write(*,*)
-  write(*,*) "       iteration_method = ", trim(iteration_method)
-  write(*,*)
-  write(*,*) "                 CFLexp = ", CFLexp !CFL for explicit method
-  write(*,*)
-  write(*,*) "                   CFL1 = ", CFL1
-  write(*,*) "                   CFL2 = ", CFL2
-  write(*,*) "         CFL_ramp_steps = ", CFL_ramp_steps
-  write(*,*) "                 sweeps = ", sweeps
-  write(*,*)
-  write(*,*) "              tolerance = ", tolerance
-  write(*,*) "       tolerance_linear = ", tolerance_linear
-  write(*,*) "          tolerance_gcr = ", tolerance_gcr
-  write(*,*) "         max_iterations = ", max_iterations
-  write(*,*) "     max_projection_gcr = ", max_projection_gcr
-  write(*,*)
-  write(*,*) "          inviscid_flux = ", trim(inviscid_flux)
-  write(*,*) "          inviscid_jac  = ", trim(inviscid_jac)
-  write(*,*)
-  write(*,*) "          gradient_type = ", trim(gradient_type)
-  write(*,*) "        gradient_weight = ", trim(gradient_weight)
-  write(*,*) "      gradient_weight_p = ", gradient_weight_p
-  write(*,*)
+! Read and print input parameters.
+  call read_nml_input_parameters("input.nml")
 
 !--------------------------------------------------------------------------------
 ! Read a grid, solve the Euler equations, and write the output datafile.
@@ -315,7 +217,8 @@ max_projection_gcr = 30         ! Max projections for GCR (larger->more expensiv
  subroutine set_initial_solution
 
  use edu2d_constants   , only : zero, one
- use edu2d_my_main_data, only : nnodes, node, gamma, M_inf, rho_inf, u_inf, v_inf, p_inf
+ use edu2d_my_main_data, only : nnodes, node, rho_inf, u_inf, v_inf, p_inf
+ use input_parameter   , only : gamma, M_inf
  use vector_operations,  only : w2u
 
  implicit none
@@ -350,7 +253,8 @@ max_projection_gcr = 30         ! Max projections for GCR (larger->more expensiv
 !********************************************************************************
  subroutine write_tecplot_file(datafile_tec)
 
- use edu2d_my_main_data, only : nnodes, node, elm, nelms, gamma
+ use edu2d_my_main_data, only : nnodes, node, elm, nelms
+ use input_parameter   , only : gamma
 
  implicit none
  character(80), intent(in) :: datafile_tec

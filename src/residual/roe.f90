@@ -32,7 +32,7 @@ module roe_scheme
  subroutine roe(primL, primR, njk,  flux, wsn)
 
  use edu2d_constants   , only : p2, zero, one, two, half, fifth
- use edu2d_my_main_data, only : gamma
+ use input_parameter, only : gamma
 
  implicit none
 

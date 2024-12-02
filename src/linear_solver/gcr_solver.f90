@@ -54,8 +54,8 @@ contains
  subroutine jfnk_gcr_solver(actual_projections,actual_sweeps,l2norm_ratio)
 
  use edu2d_constants   , only : p2, zero
- use edu2d_my_main_data, only : nq, nnodes, my_eps, max_projection_gcr, &
-                                tolerance_gcr, sweeps_actual_gcr
+ use edu2d_my_main_data, only : nq, nnodes, my_eps, sweeps_actual_gcr
+ use input_parameter,    only : max_projection_gcr, tolerance_gcr
  use frechet_derivative, only : compute_Ap
  use precond, only : preconditioner
  use vector_operations, only : vector_res, elltwo_norm, length, vector2du

@@ -27,7 +27,7 @@
  subroutine smooth(sweeps_actual,roc)
  
  use edu2d_constants   , only : p2
- use edu2d_my_main_data, only : smooth_method
+ use input_parameter   , only : smooth_method
  
  implicit none
  integer , intent(out)      :: sweeps_actual
@@ -59,8 +59,9 @@
 !********************************************************************************
  subroutine gs_sequential
 
- use edu2d_constants   , only : p2, zero
- use edu2d_my_main_data, only : nnodes, node, jac, sweeps, nq
+ use edu2d_constants   ,   only : p2, zero
+ use edu2d_my_main_data,   only : nnodes, node, jac, nq
+ use input_parameter,      only : sweeps
  use gaussian_elimination, only : gewp_solve
 
  implicit none
@@ -182,8 +183,9 @@
  subroutine gs_sequential2(sweeps_actual,roc)
 
  use edu2d_constants   , only : p2, zero
- use edu2d_my_main_data, only : nnodes, node, jac, sweeps, nq, &
-                                tolerance_linear, i_iteration
+ use edu2d_my_main_data, only : nnodes, node, jac, nq, &
+                                i_iteration
+ use input_parameter, only : sweeps, tolerance_linear
 
  implicit none
 
@@ -328,8 +330,9 @@
  subroutine sgs_sequential(sweeps_actual,roc)
 
  use edu2d_constants   , only : p2, zero
- use edu2d_my_main_data, only : nnodes, node, jac, sweeps, nq, &
-                                tolerance_linear, i_iteration
+ use edu2d_my_main_data, only : nnodes, node, jac, nq, &
+                                i_iteration
+ use input_parameter, only : sweeps, tolerance_linear
 
  implicit none
 

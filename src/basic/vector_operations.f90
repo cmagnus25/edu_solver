@@ -28,7 +28,7 @@ module vector_operations
  function w2u(w) result(u)
 
  use edu2d_constants   , only : p2, one, half
- use edu2d_my_main_data, only : gamma
+ use input_parameter   , only : gamma
 
  implicit none
 
@@ -57,7 +57,7 @@ module vector_operations
  function u2w(u) result(w)
 
  use edu2d_constants   , only : p2, one, half
- use edu2d_my_main_data, only : gamma
+ use input_parameter   , only : gamma
 
  implicit none
 

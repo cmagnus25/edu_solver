@@ -327,63 +327,30 @@
   public :: nbound, bound
   public :: nfaces, face
 
-  public :: nq
-  public :: gradient_type, gradient_weight, gradient_weight_p
-  public :: inviscid_flux, inviscid_jac 
-  public :: M_inf, rho_inf, u_inf, v_inf, p_inf 
-  public :: gamma
+  public :: rho_inf, u_inf, v_inf, p_inf 
 
   public :: i_iteration
-  public :: tolerance, tolerance_linear, tolerance_gcr, max_iterations
   public :: jac
-  public :: iteration_method
-  public :: max_projection_gcr
-  public :: CFL, CFLexp, CFL1, CFL2, CFL_ramp_steps
+  public :: CFL
   public :: CFL_frechet
-  public :: sweeps, sweeps_actual_gcr
+  public :: sweeps_actual_gcr
   public :: my_eps
-  public :: smooth_method
+  public :: nq
 
 !  Parameters
 
-   real(p2)      :: my_eps = epsilon(one) ! Machine zero
-
-   !Number of equtaions/variables in the target equtaion.
-   integer       :: nq 
-
-   !LSQ gradient related parameteres:
-   character(80) ::     gradient_type  ! "linear"; or for node-centered schemes can use "quadratic2"
-   character(80) ::    gradient_weight ! "none" or "inverse_distance"
-   real(p2)      :: gradient_weight_p  !  1.0  or any other real value
-
-   !Scheme parameters
-   character(80) :: inviscid_flux !Numerial flux for the inviscid terms (Euler)
+   real(p2)       :: my_eps = epsilon(one) ! Machine zero
 
    !Reference quantities
-   real(p2) :: M_inf, rho_inf, u_inf, v_inf, p_inf
-
-   !Ratio of specific heats = 1.4 fpr air
-   real(p2) :: gamma = 1.4_p2
-
-   !Parameter for explicit scheme
-    real(p2) :: CFLexp              ! Input CFL number for explicit RK2 scheme
+   real(p2)       :: rho_inf, u_inf, v_inf, p_inf
 
    !Implicit solver parameters
     integer       :: i_iteration         ! Iteration counter (nonlinear iteration)
-    integer       :: max_iterations      ! Maximum number of iterations
-    real(p2)      :: tolerance           ! Tolerance for steady convergence
-    real(p2)      :: tolerance_linear    ! Tolerance for steady convergence
-    real(p2)      :: tolerance_gcr       ! Tolerance for gcr non-linear solver
     real(p2)      :: CFL                 ! Actual CFL number 
-    character(80) :: iteration_method    ! explicit or implicit
-    character(80) :: inviscid_jac        ! Inviscid flux for Jacobian
-    real(p2)      :: CFL1, CFL2          ! Initial and terminal CFL number for ramping
     real(p2)      :: CFL_frechet         ! CFL number used in the Frechet derivative in NK-GCR.
-    integer       :: CFL_ramp_steps      ! Number of iterations to reach CFL2 from CFL1
-    integer       :: sweeps              ! Number of GS relaxation
     integer       :: sweeps_actual_gcr   ! 
-    integer       :: max_projection_gcr  ! Maximum number of projections in gcr solver
-    character(80) :: smooth_method       ! GS or SGS smoothing scheme
+	integer       :: nq = 4        ! The number of equtaions/variables in the target equtaion.
+                                   ! This is 4 for 2D Euler equations.
 
 !  Node data
    integer                                 :: nnodes !total number of nodes
